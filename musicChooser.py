@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 from queue import Queue
 import argparse
 import sys
@@ -19,10 +19,9 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
 
-# identify user's identity
 @app.route("/")
 def hello():
-    return "Hello World!"
+    return render_template('index.html')
 
 
 @app.route('/music/json', methods=['POST'])
@@ -70,9 +69,9 @@ def musicList():
 def music():
     re = '<p><a href="?command=start">start</a>&nbsp; \
              <a href="?command=pause">pause</a>&nbsp; \
+             <a href="?command=next">next</a>&nbsp; \
              <a href="?command=vup">vup</a>&nbsp; \
              <a href="?command=vdown">vdown</a></p>'
-
     for idx, fileName in enumerate(data_list):
         re += '<p>{id}.<a href="?id={id}">{name}</a></p>\n'.format(
             id=str(idx), name=fileName)
@@ -84,10 +83,10 @@ def music():
             re += '<p>{name} Added</p>'.format(name=data_list[id])
     if (request.args.get('command') is not None):
         command = request.args.get('command')
-        if command in ['start', 'pause', 'vup', 'vdown']:
+        if command in ['start', 'pause', 'next', 'vup', 'vdown']:
             commandQ.put(command)
             re += '<p>{}</p>'.format(command)
-    return re
+    return render_template('music.html', re=re, data_list=data_list)
 
 
 if __name__ == "__main__":

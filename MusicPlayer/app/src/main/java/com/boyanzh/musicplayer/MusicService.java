@@ -1,7 +1,6 @@
 package com.boyanzh.musicplayer;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.AudioManager;
@@ -25,7 +24,6 @@ import java.util.TimerTask;
 public class MusicService extends Service {
     public String IP = "http://192.168.1.9:5001";
     public String filePath = "/storage/emulated/0/netease/cloudmusic/Music/";
-//    public AudioManager audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);
     public MediaPlayer mediaPlayer = new MediaPlayer();
     private final IBinder binder = new MyBinder();
     private Timer timer = new Timer();
@@ -36,28 +34,12 @@ public class MusicService extends Service {
         }
     }
 
-    public MusicService() {
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                new Thread(postMusicListTask).start();
-                new Thread(getNextMusicTask).start();
-            }
-        });
-        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-            @Override
-            public boolean onError(MediaPlayer mp, int what, int extra) {
-                return true;
-            }
-        });
-    }
-
     Runnable getNextMusicTask = new Runnable() {
         @Override
         public void run() {
             filePath += getHttp(IP + "/music/api?action=get").replace("\n", "");
             loadMusic(filePath);
-            playORpuase();
+            mediaPlayer.start();//开始
         }
     };
 
@@ -65,7 +47,6 @@ public class MusicService extends Service {
         @Override
         public void run() {
             List fileList = getFileName(filePath);
-            loadMusic(filePath + fileList.get(0).toString());
             String strData = "";
             for (int i = 0; i < fileList.size(); i++) {
                 strData += fileList.get(i) + "\n";
@@ -92,9 +73,7 @@ public class MusicService extends Service {
             response = sb.toString();
             isr.close();
             reader.close();
-        } catch (IOException e) {
-            // Error
-            e.printStackTrace();
+        } catch (Exception e) {
         }
         return response;
     }
@@ -124,23 +103,22 @@ public class MusicService extends Service {
             Log.e("ee", "Message from Server: \n" + response);
             isr.close();
             reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
         }
         return response;
     }
 
     public static List<String> getFileName(String fileAbsolutePath) {
         List<String> fileList = new ArrayList<>();
-        File file = new File(fileAbsolutePath);
-        File[] subFile = file.listFiles();
-        for (int iFileLength = 0; iFileLength < subFile.length; iFileLength++) {
-            // 判断是否为文件夹
-            if (!subFile[iFileLength].isDirectory()) {
-                String filename = subFile[iFileLength].getName();
-                fileList.add(subFile[iFileLength].getName());
-                Log.e("eee", "文件名 ： " + filename);
+        try {
+            File file = new File(fileAbsolutePath);
+            File[] subFile = file.listFiles();
+            for (int iFileLength = 0; iFileLength < subFile.length; iFileLength++) {
+                if (!subFile[iFileLength].isDirectory()) {
+                    fileList.add(subFile[iFileLength].getName());
+                }
             }
+        }catch (Exception e){
         }
         return fileList;
     }
@@ -155,23 +133,44 @@ public class MusicService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                new Thread(postMusicListTask).start();
+                new Thread(getNextMusicTask).start();
+            }
+        });
+        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                return true;
+            }
+        });
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                String command = getHttp(IP + "/music/api?action=command").replace("\n","");
-                switch (command) {
-                    case "pause":
-                        mediaPlayer.pause();//暂停
-                        break;
-                    case "start":
-                        mediaPlayer.start();//开始
-                        break;
-//                    case "vup":
-//                        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
-//                        break;
-//                    case "vdown":
-//                        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
-//                        break;
+                try {
+                    AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+                    String command = getHttp(IP + "/music/api?action=command").replace("\n", "");
+                    switch (command) {
+                        case "pause":
+                            mediaPlayer.pause();//暂停
+                            break;
+                        case "start":
+                            mediaPlayer.start();//开始
+                            break;
+                        case "next":
+                            new Thread(getNextMusicTask).start();
+                            break;
+                        case "vup":
+                            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+                            break;
+                        case "vdown":
+                            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+                            break;
+                    }
+                } catch (Exception e) {
+
                 }
             }
         };
@@ -189,33 +188,12 @@ public class MusicService extends Service {
         }
     }
 
-    public void playORpuase() {
-        if (mediaPlayer.isPlaying()) {
-            mediaPlayer.pause();//暂停
-        } else {
-            mediaPlayer.start();//开始
-        }
-    }
-
-    public void stop() {
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();//停止
-            try {
-                mediaPlayer.prepare();//就绪
-                mediaPlayer.seekTo(0);//设置歌曲回到最开始
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public void loadMusic(String path) {
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(path);
             mediaPlayer.prepare();
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

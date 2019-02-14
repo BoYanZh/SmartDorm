@@ -11,7 +11,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 public class MainActivity extends Activity implements OnClickListener{
-    private Button play_pauseBtn, stopBtn, quitBtn, selectBtn;
+    private Button play_pauseBtn, selectBtn;
     private MusicService musicService;
 
     @Override
@@ -29,16 +29,12 @@ public class MainActivity extends Activity implements OnClickListener{
     private void findView() {
         /** 通过id获得各种组件 */
         play_pauseBtn = (Button) findViewById(R.id.play_pause);//开始/暂停按钮
-        stopBtn = (Button) findViewById(R.id.stop);//停止按钮
-        quitBtn = (Button) findViewById(R.id.quit);//退出按钮
         selectBtn = (Button) findViewById(R.id.select);//选择按钮
     }
 
     private void bindButton() {
         /** 为按钮添加监听 ，四个按钮的监听器都是MainActivity*/
         play_pauseBtn.setOnClickListener(this);
-        stopBtn.setOnClickListener(this);
-        quitBtn.setOnClickListener(this);
         selectBtn.setOnClickListener(this);
     }
 
@@ -58,29 +54,10 @@ public class MainActivity extends Activity implements OnClickListener{
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.play_pause://点击play_pause按钮事件
-                musicService.playORpuase();//调用musicService中的playORpause函数，暂停或开始音乐播放
-                if (musicService.mediaPlayer.isPlaying()) {
-                    play_pauseBtn.setText("PAUSE");//设置button的内容为Pause
-                } else {
-                    play_pauseBtn.setText("PLAY");//button内容为Play
-                }
-                break;
-            case R.id.stop://点击暂停
-                musicService.stop();//关闭音乐
-                play_pauseBtn.setText("PLAY");//设置开始和暂停按钮的内容为Play
-                break;
-            case R.id.quit://点击退出
-                unbindService(sc);//解除后台服务的绑定
-                try {
-                    MainActivity.this.finish();//结束当前的时间
-                    System.exit(0);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                musicService.mediaPlayer.start();
                 break;
             case R.id.select://点击选择
                 new Thread(musicService.postMusicListTask).start();
-                new Thread(musicService.getNextMusicTask).start();
                 break;
         }
     }

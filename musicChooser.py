@@ -6,12 +6,14 @@ import random
 import string
 import logging
 import glob
-
-SECRET_KEY = 'BoYanZhhhh'
+import json
 
 app = Flask(__name__)
 
 q = Queue()
+commandQ = Queue()
+data_list = []
+play_list = []
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -23,50 +25,80 @@ def hello():
     return "Hello World!"
 
 
+@app.route('/music/json', methods=['POST'])
+def fetchJson():
+    global data_list
+    if request.method == 'POST':
+        data = request.get_data()
+        for music in data.decode("utf-8").split('\n')[:-1]:
+            if music not in data_list:
+                data_list.append(music)
+        print(data_list)
+        return "\n".join(data_list)
+
+
 @app.route("/music/api")
 def musicApi():
     try:
-        if request.args.get('secretKey') != SECRET_KEY or \
-           request.args.get('action') is None:
-            raise Exception('invalid')
-        action = request.args.get('action')
-        if action == 'get':
+        # if request.args.get('secretKey') != SECRET_KEY or \
+        #    request.args.get('action') is None:
+        #     raise Exception('invalid')
+        if request.args.get('action') == 'get':
             if q.empty():
-                return 'Empty queue'
+                return random.choice(data_list)
             else:
+                play_list.pop[0]
                 return q.get()
+        if request.args.get('action') == 'command':
+            if commandQ.empty():
+                return ''
+            else:
+                return commandQ.get()
     except Exception as e:
         return 'Request Error:' + str(e)
 
 
+@app.route('/music/list')
+def musicList():
+    re = ''
+    for fileName in play_list:
+        re += '{}<br/>'.format(fileName)
+    return re
+
+
 @app.route('/music')
 def music():
-    re = ''
+    re = '<p><a href="?command=start">start</a>&nbsp; \
+             <a href="?command=pause">pause</a>&nbsp; \
+             <a href="?command=vup">vup</a>&nbsp; \
+             <a href="?command=vdown">vdown</a></p>'
+
+    for idx, fileName in enumerate(data_list):
+        re += '<p>{id}.<a href="?id={id}">{name}</a></p>\n'.format(
+            id=str(idx), name=fileName)
     if (request.args.get('id') is not None):
-        re += '<a href="/music">Back</a>'
         id = int(request.args.get('id'))
-        fileList = glob.glob(r'*.mp3')
-        if id >= 1 and id <= len(fileList):
-            q.put(str(id))
-    else:
-        id = 1
-        for fileName in glob.glob(r'*.mp3'):
-            re += '<p>' + str(id) + '. ' + \
-               '<a href="?id=' + str(id) + '">' + fileName[:-4] + '</a>' + \
-               '</p>\n'
-            id += 1
+        if id >= 0 and id <= len(data_list):
+            play_list.append(data_list[id])
+            q.put(data_list[id])
+            re += '<p>{name} Added</p>'.format(name=data_list[id])
+    if (request.args.get('command') is not None):
+        command = request.args.get('command')
+        if command in ['start', 'pause', 'vup', 'vdown']:
+            commandQ.put(command)
+            re += '<p>{}</p>'.format(command)
     return re
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Music Chooser Server.')
     parser.add_argument('-ip', default='0.0.0.0', type=str)
-    parser.add_argument('-port', default='5000', type=str)
+    parser.add_argument('-port', default='5001', type=str)
     parser.add_argument('-sk', default='BoYanZhhhh', type=str)
     args = vars(parser.parse_args())
     SECRET_KEY = args['sk']
     if SECRET_KEY == 'YourSecretKey':
         SECRET_KEY = ''.join(
             random.sample(string.ascii_letters + string.digits, 8))
-    print('Your Secret Key: ' + SECRET_KEY)
+    print('start')
     app.run(host=args['ip'], port=args['port'])

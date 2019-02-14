@@ -56,6 +56,6 @@ open in vlc: `http://127.0.0.1:8090/test.mp3`
 python
 ```python
 import subprocess
-p = subprocess.Popen(["ffmpeg", "-re", "-i", "test.mp3", "http://localhost:8090/feed1.ffm"])
+p = subprocess.Popen(["ffmpeg", "-re", "-i", "test.mp3", "http://localhost:8090/feed1.ffm"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
 p.kill()
 ```

@@ -53,6 +53,11 @@ def add_by_name():
     play_list_manager.add_song_by_name(request.args.get('name'))
     return 'OK'
 
+@app.route("/next")
+def next():
+    play_list_manager.play_next = True
+    return 'OK'
+
 
 @app.route('/music')
 def music():

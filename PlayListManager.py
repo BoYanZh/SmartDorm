@@ -1,6 +1,7 @@
 # coding = utf-8
 import os
 import time
+import signal
 import threading as td
 from queue import Queue
 import random
@@ -20,12 +21,14 @@ class PlayListManager:
         self.play_list_ids = []
         self.file_names = []
         self.q_new_song = Queue()
-        # self.ffserver = subprocess.Popen(
-        #             ["ffserver", "-f", var_set['ffserver_config']],
-        #             stdout=subprocess.PIPE,
-        #             stderr=subprocess.STDOUT,
-        #             universal_newlines=True
-        #         )
+        self.play_next = False
+        self.pause = False
+        self.ffserver = subprocess.Popen(
+                    ["ffserver", "-f", var_set['ffserver_config']],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True
+                )
 
         # load local playlist
         if os.path.exists(var_set['download_path']):
@@ -49,7 +52,7 @@ class PlayListManager:
             os.mkdir(self.pic_path)
             self.add_song_by_id(521416315)
 
-        self.player = td.Thread(target=self._player, name='Player', args=(self.q_new_song, self.file_names))
+        self.player = td.Thread(target=self._player, name='Player')
         self.player.start()
 
     def add_song_by_name(self, name):
@@ -67,8 +70,8 @@ class PlayListManager:
 
     def add_song_by_id(self, song_id):
         print('Adding', song_id)
-
         try:
+            song_id = int(song_id)
             self.file_names = os.listdir(self.song_path)
             self.play_list_ids = []
             for file_name in self.file_names:
@@ -78,6 +81,7 @@ class PlayListManager:
             if song_id in self.play_list_ids:
                 for file in glob.glob(os.path.join(self.song_path, '%010d' % song_id + '*')):
                     self.q_new_song.put(os.path.split(file)[1])
+                    self.play_next = True
                 return
 
             # get song url
@@ -125,6 +129,7 @@ class PlayListManager:
             # push q_new_song
             self.q_new_song.put(mp3_file_name)
             self.play_list_ids.append(song_id)
+            self.play_next = True
         except Exception as e:  # 防炸
             print('shit')
             print(e)
@@ -147,16 +152,15 @@ class PlayListManager:
             print('shit')
             print(e)
 
-    @staticmethod
-    def _player(q_add_song, playlist):
+    def _player(self):
         while True:
             song_path = os.path.join(var_set['download_path'], 'song')
             if os.path.exists(song_path):
                 playlist = os.listdir(song_path)
 
             # get next song
-            if not q_add_song.empty():
-                nxt_song_filename = q_add_song.get()
+            if not self.q_new_song.empty():
+                nxt_song_filename = self.q_new_song.get()
                 if nxt_song_filename not in playlist:
                     nxt_song_filename = random.choice(playlist)
             else:
@@ -173,7 +177,10 @@ class PlayListManager:
                     universal_newlines=True
                 )
                 while p.poll() is None:
-                    time.sleep(2)
+                    time.sleep(1)
+                    if self.play_next:
+                        self.play_next = False
+                        p.send_signal(2)
                 if p.poll() == 1:
                     print(p.stdout.read())
                 print('FFmpeg Ended with code', p.poll())

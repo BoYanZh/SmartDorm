@@ -50,3 +50,12 @@ ffmpeg -re -i test.mp3 http://localhost:8090/feed1.ffm
 Play 
 
 open in vlc: `http://127.0.0.1:8090/test.mp3`
+
+## Internal Use Only
+
+python
+```python
+import subprocess
+p = subprocess.Popen(["ffmpeg", "-re", "-i", "test.mp3", "http://localhost:8090/feed1.ffm"])
+p.kill()
+```

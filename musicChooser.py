@@ -6,6 +6,9 @@ import random
 import string
 import logging
 import glob
+import PlayListManager
+
+play_list_manager = PlayListManager.PlayListManager()
 
 SECRET_KEY = 'BoYanZhhhh'
 
@@ -37,6 +40,18 @@ def musicApi():
                 return q.get()
     except Exception as e:
         return 'Request Error:' + str(e)
+
+
+@app.route("/add_by_id")
+def add_by_id():
+    play_list_manager.add_song_by_id(request.args.get('id'))
+    return 'OK'
+
+
+@app.route("/add_by_name")
+def add_by_name():
+    play_list_manager.add_song_by_name(request.args.get('name'))
+    return 'OK'
 
 
 @app.route('/music')

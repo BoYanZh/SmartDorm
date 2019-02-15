@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect
 from queue import Queue
 import argparse
 import sys
@@ -56,6 +56,10 @@ def musicList():
 
 @app.route('/music')
 def music():
+    if request.args.get('id') is not None:
+        id = int(request.args.get('id'))
+        play_list_manager.add_song_by_id(id)
+        return redirect('/music')
     re = '<p><a href="?command=start">start</a>&nbsp; \
              <a href="?command=pause">pause</a>&nbsp; \
              <a href="?command=next">next</a>&nbsp; \
@@ -64,9 +68,6 @@ def music():
     for obj in play_list_manager.db.objects:
         re += '<p>{id}.<a href="?id={id}">{name}</a></p>\n'.format(
             id=obj['song_id'], name=obj['song_name'])
-    if request.args.get('id') is not None:
-        id = int(request.args.get('id'))
-        play_list_manager.add_song_by_id(id)
     if request.args.get('command') is not None:
         command = request.args.get('command')
         if command == 'next':

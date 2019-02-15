@@ -180,6 +180,8 @@ class PlayListManager:
             )
             while p.poll() is None:
                 time.sleep(0.1)
+
+                # Next
                 try:
                     if self.play_next:
                         p.send_signal(2)

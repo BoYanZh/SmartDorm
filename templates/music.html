@@ -44,8 +44,9 @@
     $('#message').hide();
 
     function ajaxSubmit() {
-        $('#message').html('申请已发出');
+        $('#message').html('申请已发出，请等待');
         $('#message').show();
+        setTimeout("$('#message').hide();", 3000);
         $.ajax({
             url: '/add_by_name',
             type: 'GET',

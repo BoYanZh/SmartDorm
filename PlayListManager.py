@@ -61,16 +61,7 @@ class PlayListManager:
         except FileNotFoundError:
             print("ffserver not found!")
         # load local playlist
-        if os.path.exists(var_set['download_path']):
-            self.song_path = os.path.join(var_set['download_path'], 'song')
-            if os.path.exists(self.song_path):
-                self.file_names = os.listdir(self.song_path)
-                for file_name in self.file_names:
-                    self.play_list_ids.append(int(file_name[:10]))
-            else:
-                os.mkdir(self.song_path)
-
-        else:
+        if not os.path.exists(var_set['download_path']):
             os.mkdir(var_set['download_path'])
             self.song_path = os.path.join(var_set['download_path'], 'song')
             os.mkdir(self.song_path)
@@ -100,10 +91,9 @@ class PlayListManager:
         print('Adding', song_id)
         try:
             song_id = int(song_id)
-            self.file_names = os.listdir(self.song_path)
-            self.play_list_ids = []
-            for file_name in self.file_names:
-                self.play_list_ids.append(int(file_name[:10]))
+            if song_id in self.now_adding:
+                return
+            self.now_adding.append(song_id)
 
             # check id
             old_obj = self.db.get_object_by_key('song_id', song_id)
@@ -112,9 +102,6 @@ class PlayListManager:
                 self.play_next = True
                 return
 
-            if song_id in self.now_adding:
-                return
-            self.now_adding.append(song_id)
             # get song url
             info = json.loads(
                 urlopen('https://api.imjad.cn/cloudmusic/?id=' + str(song_id) + '&br=320000').read().decode('utf-8')
@@ -152,7 +139,6 @@ class PlayListManager:
 
             # push q_new_song
             self.q_new_song.put(new_song_obj)
-            self.play_list_ids.append(song_id)
             self.next()
             self.now_adding.remove(song_id)
         except Exception as e:  # 防炸

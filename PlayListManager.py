@@ -6,15 +6,16 @@ import re
 import threading as td
 from queue import Queue
 import random
-from urllib.request import urlopen, urlretrieve
+from urllib.request import urlopen, urlretrieve, Request
 from urllib.parse import urlencode
 import json
 import subprocess
 from PIL import Image
 import glob
+import signal
 
 var_set = json.load(open('config.json'))
-
+HEAD = {'User-Agent': 'BiLiBiLi Audio Streamer/1.0.0 (1328410180@qq.com)', "Cookie": "buvid3=91585DCB-8DE6-4C63-9173-45C98A2A511C77387infoc; LIVE_BUVID=AUTO5015502255888665"}
 
 class JsonDB:
     def __init__(self):
@@ -77,11 +78,18 @@ class PlayListManager:
         return
 
     def add_song_by_name_or_link(self, name):
+        if not name:
+            return
         print('Searching', name)
         try:
             id = re.search(r'http://music\.163\.com/song/(\d+)/', name)
             if id:
                 self.add_song_by_id(int(id.group(1)))
+                return
+
+            id = re.search(r'https://www.bilibili.com/video/av(\d+)', name)
+            if id:
+                self.add_song_by_av(int(id.group(1)))
                 return
 
             api_url = 'https://api.imjad.cn/cloudmusic/?'
@@ -90,6 +98,92 @@ class PlayListManager:
             if code['code'] == 200:
                 song_id = code['result']['songs'][0]['id']
                 self.add_song_by_id(song_id)
+        except Exception as e:  # 防炸
+            print('shit')
+            print(e)
+
+    def add_song_by_av(self, aid):
+        print('Adding', aid)
+        try:
+            song_id = int(aid)
+            if song_id in self.now_adding:
+                return
+            self.now_adding.append(song_id)
+
+            # check id
+            old_obj = self.db.get_object_by_key('song_id', 'av{}'.format(song_id))
+            if old_obj:
+                self.q_new_song.put(old_obj)
+                self.play_next = True
+                self.now_adding.append(song_id)
+                return
+
+            # get song url
+            req = Request('http://api.imjad.cn/bilibili/v2/?aid=' + str(song_id) + '&type=archieve', headers=HEAD)
+            info = json.loads(
+                urlopen(req).read().decode('utf-8')
+            )
+            if info['code'] != 0:
+                print('[error]')
+                print(info)
+                return
+
+            song_name = info['data']['title']
+            song_tname = info['data']['tname']
+            song_uploader = info['data']['owner']['name']
+
+
+            # download song
+            mp3_file_name = 'av%012d' % song_id + '.mp3'
+
+            print('Downloading...')
+            print('songName: ' + song_name)
+            print('songUploader: ' + song_uploader)
+            req = Request('http://api.bilibili.com/playurl?callback=callbackfunction&aid={}&page=1&platform=html5&quality=1&vtype=mp4'.format(song_id), headers=HEAD)
+            song_url = json.loads(
+                urlopen(req).read().decode('utf-8')
+            )['durl'][0]['url']
+            print('songUrl: ' + song_url)
+            req = Request(song_url, headers=HEAD)
+            if os.path.exists(os.path.join(self.song_path, mp3_file_name)):
+                os.remove(os.path.join(self.song_path, mp3_file_name))
+            savep = subprocess.Popen(
+                ["ffmpeg", "-i", "pipe:0", os.path.join(self.song_path, mp3_file_name)],
+                stdin=subprocess.PIPE,
+            )
+            tmp_file = urlopen(req)
+            while True:
+                buf = tmp_file.read(1024)
+                savep.stdin.write(buf)
+                savep.stdin.flush()
+                if len(buf) < 1024 or buf[-1] == b'\0':
+                    print(len(buf), buf[-1])
+                    break
+
+            savep.stdin.write(b'\0')
+            savep.stdin.flush()
+            savep.send_signal(signal.SIGINT)
+            print("downloaded")
+            savep.wait()
+            savep.kill()
+            new_song_obj = {
+                'mp3_file_name': mp3_file_name,
+                'song_url': song_url,
+                'song_name': song_name,
+                'song_id': 'av{}'.format(song_id),
+                'states': 'downloaded',
+                'ar': song_uploader,
+                'al': 'bilibili_'+song_tname,
+                'detail': info,
+            }
+            self.db.append(new_song_obj)
+            self.db.save()
+            print(new_song_obj)
+
+            # push q_new_song
+            self.q_new_song.put(new_song_obj)
+            self.next()
+            self.now_adding.remove(song_id)
         except Exception as e:  # 防炸
             print('shit')
             print(e)
@@ -230,5 +324,5 @@ class PlayListManager:
                 except ValueError:
                     p.kill()
                     self.play_next = False
-            print('FFmpeg Ended with code', p.poll())
+            # print('FFmpeg Ended with code', p.poll())
             p.kill()

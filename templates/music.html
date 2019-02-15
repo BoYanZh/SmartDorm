@@ -73,13 +73,15 @@
         });
         $('#id_name').val('');
     }
+    var refresh = false;
     function updateProgress(){
         let p = $('#id_progress');
-        p.val(p.val()+1);
-        if(p.attr('max') - p.attr('value') < 1){
+        p.val(p.val()+0.1);
+        if(!refresh && p.attr('max') - p.attr('value') < 0.2){
+            refresh = true;
             setTimeout("window.location = '/music';", 3000);
         }
     }
-    setInterval("updateProgress();", 1000);
+    setInterval("updateProgress();", 100);
 </script>
 {% endblock %}

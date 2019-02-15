@@ -139,7 +139,7 @@ class PlayListManager:
             print('Downloading...')
             print('songName: ' + song_name)
             print('songUploader: ' + song_uploader)
-            req = Request('http://api.bilibili.com/playurl?callback=callbackfunction&aid={}&page=1&platform=html5&quality=1&vtype=mp4'.format(song_id), headers=HEAD)
+            req = Request('http://api.bilibili.com/playurl?callback=callbackfunction&aid={}&page=1&platform=html5&quality=3'.format(song_id), headers=HEAD)
             song_url = json.loads(
                 urlopen(req).read().decode('utf-8')
             )['durl'][0]['url']
@@ -150,8 +150,8 @@ class PlayListManager:
             savep = subprocess.Popen(
                 ["ffmpeg", "-i", "pipe:0", os.path.join(self.song_path, mp3_file_name)],
                 stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                # stdout=subprocess.PIPE,
+                # stderr=subprocess.STDOUT,
             )
             tmp_file = urlopen(req)
             while True:
@@ -164,6 +164,7 @@ class PlayListManager:
 
             savep.stdin.write(b'\0')
             savep.stdin.flush()
+            time.sleep(1)
             savep.send_signal(signal.SIGINT)
             print("downloaded")
             savep.wait()

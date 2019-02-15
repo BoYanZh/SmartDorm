@@ -271,9 +271,8 @@ class PlayListManager:
 
     def del_song_by_id_or_av(self, song_id):
         # del song files
-        # try:
+        try:
             obj = self.db.get_object_by_key('song_id', song_id)
-            print(self.db.objects)
             song_path = os.path.join(var_set['download_path'], 'song')
             mp3_file_path = os.path.join(song_path, obj['mp3_file_name'])
             if os.path.exists(mp3_file_path):
@@ -281,9 +280,9 @@ class PlayListManager:
             self.db.delete(obj)
             self.db.save()
             print('Deleted')
-        # except Exception as e:  # 防炸
-        #     print('shit')
-        #     print(e)
+        except Exception as e:  # 防炸
+            print('shit')
+            print(e)
 
     def _player(self):
         while True:

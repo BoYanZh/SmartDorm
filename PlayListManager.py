@@ -50,6 +50,7 @@ class PlayListManager:
         self.play_next = False
         self.pause = False
         self.db = JsonDB()
+        self.now_adding = []
         try:
             self.ffserver = subprocess.Popen(
                         ["ffserver", "-f", var_set['ffserver_config']],
@@ -111,6 +112,9 @@ class PlayListManager:
                 self.play_next = True
                 return
 
+            if song_id in self.now_adding:
+                return
+            self.now_adding.append(song_id)
             # get song url
             info = json.loads(
                 urlopen('https://api.imjad.cn/cloudmusic/?id=' + str(song_id) + '&br=320000').read().decode('utf-8')
@@ -150,6 +154,7 @@ class PlayListManager:
             self.q_new_song.put(new_song_obj)
             self.play_list_ids.append(song_id)
             self.next()
+            self.now_adding.remove(song_id)
         except Exception as e:  # 防炸
             print('shit')
             print(e)

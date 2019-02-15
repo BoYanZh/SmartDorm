@@ -187,6 +187,7 @@ class PlayListManager:
                     t = int(time.time() - p_start_time)
                     p.send_signal(2)
                     p.wait()
+                    p.kill()
                     silent = subprocess.Popen(
                         ["ffmpeg", "-re", "-f", "lavfi", "-i", "aevalsrc=0", "http://127.0.0.1:8090/feed1.ffm"],
                         stdout=subprocess.PIPE,
@@ -198,6 +199,7 @@ class PlayListManager:
                         time.sleep(0.01)
                     silent.send_signal(2)
                     silent.wait()
+                    silent.kill()
                     print("Starting at", t)
                     p = subprocess.Popen(
                         ["ffmpeg", "-re", "-i", mp3_file_path, "-ss", str(t), "http://127.0.0.1:8090/feed1.ffm"],

@@ -23,14 +23,18 @@
 <p></p>
 <table class="table table-striped table-sm">
     <thead>
-        <th>id</th>
-        <th>name</th>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Artist</th>
+        <th>Album</th>
     </thead>
     <tbody>
         {% for music in data_list %}
         <tr>
             <td>{{ music.song_id }}</td>
             <td><a href="?id={{ music.song_id }}">{{ music.song_name }}</a></td>
+            <td>{{ music.ar }}</td>
+            <td>{{ music.al }}</td>
         </tr>
         {% endfor %}
     </tbody>

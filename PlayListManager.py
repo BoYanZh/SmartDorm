@@ -61,7 +61,7 @@ class PlayListManager:
                     )
         except FileNotFoundError:
             print("ffserver not found!")
-        
+
         self.song_path = os.path.join(var_set['download_path'], 'song')
         # load local playlist
         if not os.path.exists(var_set['download_path']):
@@ -141,6 +141,9 @@ class PlayListManager:
                 'song_name': song_name,
                 'song_id': song_id,
                 'states': 'downloaded',
+                'ar': ' '.join([ar['name'] for ar in detail_info['songs'][0]['ar']]),
+                'al': detail_info['songs'][0]['al']['name'],
+                'detail': detail_info,
             }
             self.db.append(new_song_obj)
             self.db.save()

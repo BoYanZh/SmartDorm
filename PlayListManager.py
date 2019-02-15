@@ -57,6 +57,7 @@ class PlayListManager:
         self.pause = False
         self.db = JsonDB()
         self.now_adding = []
+        self.now_playing = None
         try:
             self.ffserver = subprocess.Popen(
                         ["ffserver", "-f", var_set['ffserver_config']],
@@ -293,7 +294,7 @@ class PlayListManager:
                 nxt_song = self.q_new_song.get()
             else:
                 nxt_song = random.choice(self.db.objects)
-
+            self.now_playing = nxt_song
             song_path = os.path.join(var_set['download_path'], 'song')
             mp3_file_path = os.path.join(song_path, nxt_song['mp3_file_name'])
             p = subprocess.Popen(
@@ -305,7 +306,14 @@ class PlayListManager:
             p_start_time = time.time()
             t = 0
             while p.poll() is None:
+                p_time = re.search(r'Duration: (\d+):(\d+):(\d+).(\d+),', p.stdout.readline())
+                if p_time:
+                    self.now_playing['tottime'] = int(p_time.group(1)) * 3600 + int(p_time.group(2)) * 60 + int(p_time.group(3))
+                    break
+
+            while p.poll() is None:
                 time.sleep(0.1)
+                self.now_playing['time'] = t + int(time.time() - p_start_time)
 
                 # Pause
                 if self.pause:

@@ -3,22 +3,26 @@
 {% block content %}
 <div class="alert alert-warning" id="message"></div>
 <div class="text-center">
-    <div class="btn-group" role="group">
+    <a class="btn btn-outline-primary pull-left" href="#">{{ now.song_name }}</a>
+    <div class="row pull-right">
+    <div class="btn-group mr-3" role="group">
         <a class="btn btn-outline-primary" href="?command=start"><i class="fa fa-play" aria-hidden="true"></i></a>
         <a class="btn btn-outline-primary" href="?command=pause"><i class="fa fa-pause" aria-hidden="true"></i></a>
         <a class="btn btn-outline-primary" href="?command=next"><i class="fa fa-step-forward" aria-hidden="true"></i></a>
     </div>
-    <div class="btn-group" role="group">
-        <a class="btn btn-outline-primary" href="?command=vup"><i class="fa fa-volume-up" aria-hidden="true"></i></a>
-        <a class="btn btn-outline-primary" href="?command=vdown"><i class="fa fa-volume-down" aria-hidden="true"></i></a>
-    </div>
-    <form class="form-inline pull-right" onsubmit="ajaxSubmit();return false;">
+    <form class="form-inline" onsubmit="ajaxSubmit();return false;">
         <input class="form-control mr-sm-2" type="text" name="name" id="id_name" placeholder="添加歌曲">
         <button class="btn btn-outline-primary d-none d-md-block" type="button" onclick="ajaxSubmit();">
             <i class="fa fa-search" aria-hidden="true"></i>
         </button>
     </form>
+    </div>
+{#    <div class="btn-group pull-right" role="group">#}
+{#        <a class="btn btn-outline-primary" href="?command=vup"><i class="fa fa-volume-up" aria-hidden="true"></i></a>#}
+{#        <a class="btn btn-outline-primary" href="?command=vdown"><i class="fa fa-volume-down" aria-hidden="true"></i></a>#}
+{#    </div>#}
 </div>
+<progress value='{{ now.time }}' max='{{ now.tottime }}' class="progress-bar-info col-12"></progress>
 {% if data_list %}
 <p></p>
 <table class="table table-striped table-sm">

@@ -95,7 +95,7 @@ def music():
     for obj in play_list_manager.db.objects:
         re += '<p>{id}.<a href="?id={id}">{name}</a></p>\n'.format(
             id=obj['song_id'], name=obj['song_name'])
-    return render_template('music.html', now=play_list_manager.now_playing, data_list=play_list_manager.db.objects)
+    return render_template('music.html', now=play_list_manager.now_playing, paused=play_list_manager.pause, data_list=play_list_manager.db.objects)
 
 
 if __name__ == "__main__":

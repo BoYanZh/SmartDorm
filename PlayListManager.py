@@ -100,6 +100,7 @@ class PlayListManager:
             if old_obj:
                 self.q_new_song.put(old_obj)
                 self.play_next = True
+                self.now_adding.append(song_id)
                 return
 
             # get song url

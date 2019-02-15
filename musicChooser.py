@@ -58,7 +58,7 @@ def musicList():
 def music():
     if request.args.get('id') is not None:
         id = request.args.get('id')
-        if id.startwith('av'):
+        if id.startswith('av'):
             play_list_manager.add_song_by_av(int(id[2:]))
         else:
             play_list_manager.add_song_by_id(int(id))

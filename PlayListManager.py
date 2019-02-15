@@ -2,6 +2,7 @@
 import os
 import time
 import signal
+import re
 import threading as td
 from queue import Queue
 import random
@@ -74,9 +75,13 @@ class PlayListManager:
         self.play_next = True
         return
 
-    def add_song_by_name(self, name):
+    def add_song_by_name_or_link(self, name):
         try:
-            print('Searching '+name)
+            id = re.search(r'http://music\.163\.com/song/(\d+)/', name)
+            if id:
+                self.add_song_by_id(int('Searching '+name))
+                return
+            
             api_url = 'https://api.imjad.cn/cloudmusic/?'
             code = urlencode({'type': 'search', 'limit': 1, 's': name})
             code = json.loads(urlopen(api_url + code).read().decode('utf-8'))

@@ -36,7 +36,7 @@ def add_by_id():
 
 @app.route("/add_by_name")
 def add_by_name():
-    play_list_manager.add_song_by_name(request.args.get('name'))
+    play_list_manager.add_song_by_name_or_link(request.args.get('name'))
     return 'OK'
 
 

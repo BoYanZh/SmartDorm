@@ -150,6 +150,8 @@ class PlayListManager:
             savep = subprocess.Popen(
                 ["ffmpeg", "-i", "pipe:0", os.path.join(self.song_path, mp3_file_name)],
                 stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
             tmp_file = urlopen(req)
             while True:
@@ -178,7 +180,6 @@ class PlayListManager:
             }
             self.db.append(new_song_obj)
             self.db.save()
-            print(new_song_obj)
 
             # push q_new_song
             self.q_new_song.put(new_song_obj)

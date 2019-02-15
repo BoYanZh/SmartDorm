@@ -76,12 +76,13 @@ class PlayListManager:
         return
 
     def add_song_by_name_or_link(self, name):
+        print('Searching', name)
         try:
             id = re.search(r'http://music\.163\.com/song/(\d+)/', name)
             if id:
-                self.add_song_by_id(int('Searching '+name))
+                self.add_song_by_id(int(id.group(1)))
                 return
-            
+
             api_url = 'https://api.imjad.cn/cloudmusic/?'
             code = urlencode({'type': 'search', 'limit': 1, 's': name})
             code = json.loads(urlopen(api_url + code).read().decode('utf-8'))

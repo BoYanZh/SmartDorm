@@ -27,6 +27,7 @@
         <th>Name</th>
         <th>Artist</th>
         <th>Album</th>
+        <th>Del</th>
     </thead>
     <tbody>
         {% for music in data_list %}
@@ -35,6 +36,11 @@
             <td><a href="?id={{ music.song_id }}">{{ music.song_name }}</a></td>
             <td>{{ music.ar }}</td>
             <td>{{ music.al }}</td>
+            <td>
+                <a class="btn btn-outline-primary d-none d-md-block" href="music/del?id={{ music.song_id }}">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                </a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

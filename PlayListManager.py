@@ -193,8 +193,9 @@ class PlayListManager:
                 'song_id': 'av{}'.format(song_id),
                 'states': 'downloaded',
                 'ar': song_uploader,
-                'al': 'bilibili_'+song_tname,
+                'al': song_tname,
                 'detail': info,
+                'ori': "https://www.bilibili.com/video/av{}".format(song_id),
             }
             self.db.append(new_song_obj)
             self.db.save()
@@ -257,6 +258,7 @@ class PlayListManager:
                 'ar': ' '.join([ar['name'] for ar in detail_info['songs'][0]['ar']]),
                 'al': detail_info['songs'][0]['al']['name'],
                 'detail': detail_info,
+                'ori': "http://music.163.com/song?id={}".format(song_id),
             }
             self.db.append(new_song_obj)
             self.db.save()

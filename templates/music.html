@@ -32,7 +32,7 @@
     <tbody>
         {% for music in data_list %}
         <tr>
-            <td>{{ music.song_id }}</td>
+            <td><a href="{{ music.ori }}">{{ music.song_id }}</a></td>
             <td><a href="?id={{ music.song_id }}">{{ music.song_name }}</a></td>
             <td>{{ music.ar }}</td>
             <td>{{ music.al }}</td>

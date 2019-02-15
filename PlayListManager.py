@@ -193,10 +193,12 @@ class PlayListManager:
                         stderr=subprocess.STDOUT,
                         universal_newlines=True
                     )
+                    print("Paused, will start at", t)
                     while self.pause:
                         time.sleep(0.01)
                     silent.send_signal(2)
                     silent.wait()
+                    print("Starting at", t)
                     p = subprocess.Popen(
                         ["ffmpeg", "-re", "-i", mp3_file_path, "-ss", str(t), "http://127.0.0.1:8090/feed1.ffm"],
                         stdout=subprocess.PIPE,

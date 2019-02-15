@@ -172,34 +172,29 @@ class PlayListManager:
 
     def _player(self):
         while True:
-            song_path = os.path.join(var_set['download_path'], 'song')
-            playlist = os.listdir(song_path)
-
             # get next song
             if not self.q_new_song.empty():
                 nxt_song = self.q_new_song.get()
-                if nxt_song not in playlist:
-                    nxt_song = random.choice(self.db.objects)
             else:
                 nxt_song = random.choice(self.db.objects)
 
-            if nxt_song:
-                song_path = os.path.join(var_set['download_path'], 'song')
-                mp3_file_path = os.path.join(song_path, nxt_song['mp3_file_name'])
-                p = subprocess.Popen(
-                    ["ffmpeg", "-re", "-i", mp3_file_path, "http://127.0.0.1:8090/feed1.ffm"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    universal_newlines=True
-                )
-                while p.poll() is None:
-                    time.sleep(0.1)
-                    try:
-                        if self.play_next:
-                            p.send_signal(2)
-                            self.play_next = False
-                    except ValueError:
-                        p.kill()
+            song_path = os.path.join(var_set['download_path'], 'song')
+            mp3_file_path = os.path.join(song_path, nxt_song['mp3_file_name'])
+            p = subprocess.Popen(
+                ["ffmpeg", "-re", "-i", mp3_file_path, "http://127.0.0.1:8090/feed1.ffm"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            while p.poll() is None:
+                time.sleep(0.1)
+                try:
+                    if self.play_next:
+                        p.send_signal(2)
                         self.play_next = False
-                print('FFmpeg Ended with code', p.poll())
-                p.kill()
+                        p.wait()
+                except ValueError:
+                    p.kill()
+                    self.play_next = False
+            print('FFmpeg Ended with code', p.poll())
+            p.kill()

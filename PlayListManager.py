@@ -186,9 +186,6 @@ class PlayListManager:
             if nxt_song:
                 song_path = os.path.join(var_set['download_path'], 'song')
                 mp3_file_path = os.path.join(song_path, nxt_song['mp3_file_name'])
-
-                print(["ffmpeg", "-re", "-i", mp3_file_path, "http://127.0.0.1:8090/feed1.ffm"])
-
                 p = subprocess.Popen(
                     ["ffmpeg", "-re", "-i", mp3_file_path, "http://127.0.0.1:8090/feed1.ffm"],
                     stdout=subprocess.PIPE,
@@ -196,7 +193,7 @@ class PlayListManager:
                     universal_newlines=True
                 )
                 while p.poll() is None:
-                    time.sleep(1)
+                    time.sleep(0.1)
                     try:
                         if self.play_next:
                             p.send_signal(2)

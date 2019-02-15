@@ -82,12 +82,12 @@ class PlayListManager:
             return
         print('Searching', name)
         try:
-            id = re.search(r'http://music\.163\.com/song/(\d+)/', name)
+            id = re.search(r'https?://music\.163\.com/song/(\d+)/', name)
             if id:
                 self.add_song_by_id(int(id.group(1)))
                 return
 
-            id = re.search(r'https://www.bilibili.com/video/av(\d+)', name)
+            id = re.search(r'https?://www.bilibili.com/video/av(\d+)', name)
             if id:
                 self.add_song_by_av(int(id.group(1)))
                 return

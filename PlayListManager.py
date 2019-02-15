@@ -178,8 +178,31 @@ class PlayListManager:
                 stderr=subprocess.STDOUT,
                 universal_newlines=True
             )
+            p_start_time = time.time()
             while p.poll() is None:
                 time.sleep(0.1)
+
+                # Pause
+                if self.pause:
+                    t = int(time.time() - p_start_time)
+                    p.send_signal(2)
+                    p.wait()
+                    silent = subprocess.Popen(
+                        ["ffmpeg", "-re", "-f", "lavfi", "-i", "aevalsrc=0", "http://127.0.0.1:8090/feed1.ffm"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        universal_newlines=True
+                    )
+                    while self.pause:
+                        time.sleep(0.01)
+                    silent.send_signal(2)
+                    silent.wait()
+                    p = subprocess.Popen(
+                        ["ffmpeg", "-re", "-i", mp3_file_path, "-ss", str(t), "http://127.0.0.1:8090/feed1.ffm"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        universal_newlines=True
+                    )
 
                 # Next
                 try:

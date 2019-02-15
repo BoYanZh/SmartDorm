@@ -60,6 +60,17 @@ def music():
         id = int(request.args.get('id'))
         play_list_manager.add_song_by_id(id)
         return redirect('/music')
+    elif request.args.get('command') is not None:
+        command = request.args.get('command')
+        if command == 'next':
+            next()
+        if command == 'start':
+            play_list_manager.pause = False
+        if command == 'pause':
+            play_list_manager.pause = True
+        elif command in ['start', 'pause', 'next', 'vup', 'vdown']:
+            commandQ.put(command)
+        return redirect('/music')
     re = '<p><a href="?command=start">start</a>&nbsp; \
              <a href="?command=pause">pause</a>&nbsp; \
              <a href="?command=next">next</a>&nbsp; \
@@ -68,13 +79,6 @@ def music():
     for obj in play_list_manager.db.objects:
         re += '<p>{id}.<a href="?id={id}">{name}</a></p>\n'.format(
             id=obj['song_id'], name=obj['song_name'])
-    if request.args.get('command') is not None:
-        command = request.args.get('command')
-        if command == 'next':
-            next()
-        elif command in ['start', 'pause', 'next', 'vup', 'vdown']:
-            commandQ.put(command)
-            re += '<p>{}</p>'.format(command)
     return render_template('music.html', re=re, data_list=play_list_manager.db.objects)
 
 

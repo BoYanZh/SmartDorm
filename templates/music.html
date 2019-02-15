@@ -22,8 +22,8 @@
     <tbody>
         {% for music in data_list %}
         <tr>
-            <td>{{ loop.index0 }}</td>
-            <td><a href="?id={{ loop.index0 }}">{{ music }}</a></td>
+            <td>{{ music.song_id }}</td>
+            <td><a href="?id={{ music.song_id }}">{{ music.song_name }}</a></td>
         </tr>
         {% endfor %}
     </tbody>

@@ -17,6 +17,7 @@ import signal
 var_set = json.load(open('config.json'))
 HEAD = {'User-Agent': 'BiLiBiLi Audio Streamer/1.0.0 (1328410180@qq.com)', "Cookie": "buvid3=91585DCB-8DE6-4C63-9173-45C98A2A511C77387infoc; LIVE_BUVID=AUTO5015502255888665"}
 
+
 class JsonDB:
     def __init__(self):
         if not os.path.exists("db.json"):
@@ -37,9 +38,12 @@ class JsonDB:
     def append(self, obj):
         self.objects.append(obj)
 
+    def delete(self, obj):
+        return self.objects.remove(obj)
+
     def get_object_by_key(self, key, value):
         for obj in self.objects:
-            if obj[key] == value:
+            if str(obj[key]) == str(value):
                 return obj
 
 
@@ -86,8 +90,17 @@ class PlayListManager:
             if id:
                 self.add_song_by_id(int(id.group(1)))
                 return
+            id = re.search(r'https?://music\.163\.com/m/song\?id=(\d+)', name)
+            if id:
+                self.add_song_by_id(int(id.group(1)))
+                return
 
             id = re.search(r'https?://www.bilibili.com/video/av(\d+)', name)
+            if id:
+                self.add_song_by_av(int(id.group(1)))
+                return
+
+            id = re.search(r'^av(\d+)$', name)
             if id:
                 self.add_song_by_av(int(id.group(1)))
                 return
@@ -256,21 +269,21 @@ class PlayListManager:
             print('shit')
             print(e)
 
-    def del_song_by_id(self, song_id):
+    def del_song_by_id_or_av(self, song_id):
         # del song files
-        try:
-            self.file_names = os.listdir(self.song_path)
-            self.play_list_ids = []
-            for file_name in self.file_names:
-                self.play_list_ids.append(int(file_name[:10]))
-
-            if song_id in self.play_list_ids:
-                for file in glob.glob(os.path.join(self.song_path, '%010d' % song_id + '*')):
-                    os.remove(file)
+        # try:
+            obj = self.db.get_object_by_key('song_id', song_id)
+            print(self.db.objects)
+            song_path = os.path.join(var_set['download_path'], 'song')
+            mp3_file_path = os.path.join(song_path, obj['mp3_file_name'])
+            if os.path.exists(mp3_file_path):
+                os.remove(mp3_file_path)
+            self.db.delete(obj)
+            self.db.save()
             print('Deleted')
-        except Exception as e:  # 防炸
-            print('shit')
-            print(e)
+        # except Exception as e:  # 防炸
+        #     print('shit')
+        #     print(e)
 
     def _player(self):
         while True:

@@ -54,6 +54,14 @@ def musicList():
     return re
 
 
+@app.route('/music/del')
+def music_del():
+    if request.args.get('id') is not None:
+        id = request.args.get('id')
+        play_list_manager.del_song_by_id_or_av(id)
+    return redirect('/music')
+
+
 @app.route('/music')
 def music():
     if request.args.get('id') is not None:

@@ -57,8 +57,11 @@ def musicList():
 @app.route('/music')
 def music():
     if request.args.get('id') is not None:
-        id = int(request.args.get('id'))
-        play_list_manager.add_song_by_id(id)
+        id = request.args.get('id')
+        if id.startwith('av'):
+            play_list_manager.add_song_by_av(int(id[2:]))
+        else:
+            play_list_manager.add_song_by_id(int(id))
         return redirect('/music')
     elif request.args.get('command') is not None:
         command = request.args.get('command')

@@ -169,7 +169,8 @@ class PlayListManager:
             print("downloaded")
             try:
                 savep.wait(timeout=1)
-            except TimeoutError:
+            except subprocess.TimeoutExpired:
+                savep.terminate()
                 pass
             savep.kill()
             new_song_obj = {

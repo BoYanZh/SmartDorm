@@ -366,7 +366,11 @@ class PlayListManager:
                     if self.play_next:
                         p.send_signal(2)
                         self.play_next = False
-                        p.wait()
+                        try:
+                            p.wait(timeout=1)
+                        except subprocess.TimeoutExpired:
+                            p.terminate()
+                            break
                 except ValueError:
                     p.kill()
                     self.play_next = False

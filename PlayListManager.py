@@ -322,12 +322,13 @@ class PlayListManager:
             )
             p_start_time = time.time()
             t = 0
+            self.now_playing['time'] = t + int(time.time() - p_start_time)
             while p.poll() is None:
                 p_time = re.search(r'Duration: (\d+):(\d+):(\d+).(\d+),', p.stdout.readline())
                 if p_time:
                     self.now_playing['tottime'] = int(p_time.group(1)) * 3600 + int(p_time.group(2)) * 60 + int(p_time.group(3))
                     break
-            self.now_playing['time'] = 0
+            time.sleep(0.01)
             self.now_playing['addtime'] = time.clock()
             while p.poll() is None:
                 time.sleep(0.1)
@@ -369,5 +370,14 @@ class PlayListManager:
                 except ValueError:
                     p.kill()
                     self.play_next = False
+
+                # Force stop
+                if self.now_playing['tottime'] - self.now_playing['time'] < 0:
+                    p.send_signal(2)
+                    try:
+                        p.wait(timeout=1)
+                    except subprocess.TimeoutExpired:
+                        p.terminate()
+                        pass
             # print('FFmpeg Ended with code', p.poll())
             p.kill()

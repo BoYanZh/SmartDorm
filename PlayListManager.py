@@ -378,6 +378,6 @@ class PlayListManager:
                         p.wait(timeout=1)
                     except subprocess.TimeoutExpired:
                         p.terminate()
-                        pass
+                        break
             # print('FFmpeg Ended with code', p.poll())
             p.kill()

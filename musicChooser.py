@@ -66,15 +66,11 @@ def music_del():
 @app.route('/music')
 def music():
     if request.args.get('id') is not None:
-        old_time = play_list_manager.now_playing['addtime'] if 'addtime' in play_list_manager.now_playing else None
         id = request.args.get('id')
         if id.startswith('av'):
             play_list_manager.add_song_by_av(int(id[2:]))
         else:
             play_list_manager.add_song_by_id(int(id))
-        # wait
-        while 'addtime' not in play_list_manager.now_playing or play_list_manager.now_playing['addtime'] == old_time:
-            time.sleep(0.01)
         return redirect('/music')
     elif request.args.get('command') is not None:
         command = request.args.get('command')

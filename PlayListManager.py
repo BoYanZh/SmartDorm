@@ -87,23 +87,37 @@ class PlayListManager:
             return
         print('Searching', name)
         try:
+            old_time = self.now_playing['addtime'] if 'addtime' in self.now_playing else 0
+
             id = re.search(r'https?://music\.163\.com/song/(\d+)/', name)
             if id:
                 self.add_song_by_id(int(id.group(1)))
+                # wait
+                while 'addtime' not in self.now_playing or self.now_playing['addtime'] == old_time:
+                    time.sleep(0.01)
                 return
             id = re.search(r'https?://music\.163\.com/m/song\?id=(\d+)', name)
             if id:
                 self.add_song_by_id(int(id.group(1)))
+                # wait
+                while 'addtime' not in self.now_playing or self.now_playing['addtime'] == old_time:
+                    time.sleep(0.01)
                 return
 
             id = re.search(r'https?://www.bilibili.com/video/av(\d+)', name)
             if id:
                 self.add_song_by_av(int(id.group(1)))
+                # wait
+                while 'addtime' not in self.now_playing or self.now_playing['addtime'] == old_time:
+                    time.sleep(0.01)
                 return
 
             id = re.search(r'^av(\d+)$', name)
             if id:
                 self.add_song_by_av(int(id.group(1)))
+                # wait
+                while 'addtime' not in self.now_playing or self.now_playing['addtime'] == old_time:
+                    time.sleep(0.01)
                 return
 
             api_url = 'https://api.imjad.cn/cloudmusic/?'
@@ -112,6 +126,9 @@ class PlayListManager:
             if code['code'] == 200:
                 song_id = code['result']['songs'][0]['id']
                 self.add_song_by_id(song_id)
+                # wait
+                while 'addtime' not in self.now_playing or self.now_playing['addtime'] == old_time:
+                    time.sleep(0.01)
         except Exception as e:  # 防炸
             print('shit')
             print(e)
@@ -129,7 +146,7 @@ class PlayListManager:
             if old_obj:
                 self.q_new_song.put(old_obj)
                 self.play_next = True
-                self.now_adding.append(song_id)
+                self.now_adding.remove(song_id)
                 return
 
             # get song url
@@ -222,7 +239,7 @@ class PlayListManager:
             if old_obj:
                 self.q_new_song.put(old_obj)
                 self.play_next = True
-                self.now_adding.append(song_id)
+                self.now_adding.remove(song_id)
                 return
 
             # get song url

@@ -177,11 +177,10 @@ class PlayListManager:
             )
             tmp_file = urlopen(req)
             while True:
-                buf = tmp_file.read(1024)
+                buf = tmp_file.read(256)
                 savep.stdin.write(buf)
                 savep.stdin.flush()
-                if len(buf) < 1024 or buf[-1] == b'\0':
-                    print(len(buf), buf[-1])
+                if len(buf) < 256 or buf[-1] == b'\0':
                     break
 
             savep.stdin.write(b'\0')
@@ -337,7 +336,10 @@ class PlayListManager:
                 if self.pause:
                     t += int(time.time() - p_start_time)
                     p.send_signal(2)
-                    p.wait()
+                    try:
+                        p.wait(timeout=1)
+                    except subprocess.TimeoutExpired:
+                        p.terminate()
                     p.kill()
                     silent = subprocess.Popen(
                         ["ffmpeg", "-re", "-f", "lavfi", "-i", "aevalsrc=0", "http://127.0.0.1:8090/feed1.ffm"],
@@ -349,7 +351,6 @@ class PlayListManager:
                     while self.pause:
                         time.sleep(0.01)
                     silent.send_signal(2)
-                    silent.wait()
                     silent.kill()
                     time.sleep(0.1)
                     print("Starting at", t)
